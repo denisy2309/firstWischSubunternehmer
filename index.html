@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auftragsverwaltung</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-card">
+            <h1 class="login-title">Auftragsverwaltung</h1>
+            <p class="login-subtitle">Bitte geben Sie Ihren Zugangscode ein</p>
+            <div class="form-group">
+                <label for="accessCode">Zugangscode</label>
+                <input type="password" id="accessCode" placeholder="Zugangscode eingeben" autocomplete="current-password">
+            </div>
+            <button class="btn btn-primary" onclick="login()">Anmelden</button>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="hidden">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <h1 class="logo">Auftrags-System</h1>
+                    <div class="header-actions">
+                        <span id="userName" class="user-name">-</span>
+                        <span class="status-indicator" id="statusIndicator"></span>
+                        <button class="btn btn-text" onclick="logout()">Abmelden</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="container">
+            <!-- Master View -->
+            <div id="masterView" class="hidden">
+                <div class="page-header">
+                    <h2>Subunternehmer auswählen</h2>
+                </div>
+                <div id="contractorList" class="contractor-list">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+
+            <!-- Status Selection View -->
+            <div id="statusView" class="hidden">
+                <div class="page-header">
+                    <h2>Auftragsübersicht</h2>
+                    <p class="subtitle">Wählen Sie einen Status aus, um die entsprechenden Aufträge anzuzeigen</p>
+                </div>
+                
+                <div class="status-grid">
+                    <div class="status-card" data-status="open" onclick="showOrders('Offen')">
+                        <div class="status-card-content">
+                            <div class="status-icon">📋</div>
+                            <div class="status-info">
+                                <h3>Offene Aufträge</h3>
+                                <p class="status-count" id="countOpen">0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="status-card" data-status="completed" onclick="showOrders('Erledigt')">
+                        <div class="status-card-content">
+                            <div class="status-icon">✅</div>
+                            <div class="status-info">
+                                <h3>Erledigt</h3>
+                                <p class="status-count" id="countCompleted">0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="status-card" data-status="rejected" onclick="showOrders('Abgelehnt')">
+                        <div class="status-card-content">
+                            <div class="status-icon">❌</div>
+                            <div class="status-info">
+                                <h3>Abgelehnt</h3>
+                                <p class="status-count" id="countRejected">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders List View -->
+            <div id="ordersView" class="hidden">
+                <div class="orders-header">
+                    <button class="btn btn-back" onclick="backToStatus()">
+                        <span class="back-arrow">←</span>
+                        <span>Zurück</span>
+                    </button>
+                    <h2 id="ordersTitle">Aufträge</h2>
+                </div>
+                <div id="ordersList">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Completion Modal -->
+    <div id="completionModal" class="modal">
+        <div class="modal-overlay" onclick="closeModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Auftrag abschließen</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="services-section">
+                    <h3>Gebuchte Dienstleistungen</h3>
+                    <div id="modalServices" class="services-list">
+                        <!-- Services will be populated here -->
+                    </div>
+                </div>
+
+                <div class="confirmation-section">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="confirmServices">
+                        <span>Ich bestätige, dass alle gebuchten Dienstleistungen vollständig durchgeführt wurden.</span>
+                    </label>
+                </div>
+
+                <div class="signature-section">
+                    <label class="section-label">Unterschrift des Kunden *</label>
+                    <div class="signature-container">
+                        <canvas id="signatureCanvas" class="signature-canvas"></canvas>
+                    </div>
+                    <button class="btn btn-text" onclick="clearSignature()">Unterschrift löschen</button>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
+                <button class="btn btn-primary" onclick="completeOrder()">Auftrag abschließen</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
