@@ -4,7 +4,7 @@
 const CONFIG = {
     supabaseUrl: 'IHRE_SUPABASE_URL',           // z.B. 'https://xxxxx.supabase.co'
     supabaseKey: 'IHRE_SUPABASE_ANON_KEY',      // Supabase Anon Key
-    masterCode: 'MASTER_CODE_HIER',             // Master-Zugangscode
+    masterCode: 'FW-2026-Master',             // Master-Zugangscode
     n8nWebhookUrl: 'IHRE_N8N_WEBHOOK_URL'       // n8n Webhook für Ablehnungen
 };
 
