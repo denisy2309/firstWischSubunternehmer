@@ -6,7 +6,7 @@
 // KONFIGURATION - Bitte anpassen
 // ============================================================================
 const CONFIG = {
-    apiUrl: 'https://your-ngrok-url.ngrok.io',  // Deine ngrok URL (OHNE /api am Ende)
+    apiUrl: 'https://uncastigated-niels-greatly.ngrok-free.dev',  // Deine ngrok URL (OHNE /api am Ende)
     pollingInterval: 5000  // Polling alle 5 Sekunden für Updates
 };
 
