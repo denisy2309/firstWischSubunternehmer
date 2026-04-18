@@ -87,6 +87,7 @@ async function apiCall(endpoint, options = {}) {
             ...options,
             headers: {
                 'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true',  // Bypass ngrok warning
                 ...options.headers
             }
         });
