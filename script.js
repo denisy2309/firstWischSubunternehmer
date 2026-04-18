@@ -6,28 +6,25 @@
 // KONFIGURATION - Bitte anpassen
 // ============================================================================
 const CONFIG = {
-    supabaseUrl: 'IHRE_SUPABASE_URL',           // z.B. 'https://xxxxx.supabase.co'
-    supabaseKey: 'IHRE_SUPABASE_ANON_KEY',      // Supabase Anon Key
-    masterCode: 'MASTER_CODE_HIER',             // Master-Zugangscode
-    n8nWebhookUrl: 'IHRE_N8N_WEBHOOK_URL'       // n8n Webhook für Ablehnungen
+    apiUrl: 'https://your-ngrok-url.ngrok.io',  // Deine ngrok URL (OHNE /api am Ende)
+    pollingInterval: 5000  // Polling alle 5 Sekunden für Updates
 };
 
 // ============================================================================
 // GLOBALE VARIABLEN
 // ============================================================================
-let supabase;
 let currentUser = null;
 let currentStatus = null;
 let currentOrder = null;
 let allOrders = [];
 let signaturePad = null;
-let realtimeChannel = null;
+let pollingTimer = null;
+let lastUpdateTimestamp = null;
 
 // ============================================================================
 // INITIALISIERUNG
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
-    initSupabase();
     checkStoredLogin();
     setupSignaturePad();
     setupEventListeners();
@@ -80,8 +77,31 @@ function setupEventListeners() {
     if (clearSignatureBtn) clearSignatureBtn.addEventListener('click', clearSignature);
 }
 
-function initSupabase() {
-    supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
+// ============================================================================
+// API HELPER FUNCTIONS
+// ============================================================================
+async function apiCall(endpoint, options = {}) {
+    try {
+        const url = `${CONFIG.apiUrl}/api${endpoint}`;
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'API Fehler');
+        }
+
+        return data;
+    } catch (error) {
+        console.error('API Call error:', error);
+        throw error;
+    }
 }
 
 // ============================================================================
@@ -103,42 +123,26 @@ async function login() {
         return;
     }
 
-    // Check if master code
-    if (code === CONFIG.masterCode) {
-        currentUser = {
-            code: code,
-            name: 'Master',
-            isMaster: true,
-            tableName: null
-        };
-        localStorage.setItem('accessCode', code);
-        showMasterView();
-        return;
-    }
+    try {
+        const result = await apiCall('/login', {
+            method: 'POST',
+            body: JSON.stringify({ code })
+        });
 
-    // Check subcontractor code in database
-    // Annahme: Sie haben eine Tabelle 'contractors' mit Feldern: code, name, table_name
-    const { data, error } = await supabase
-        .from('contractors')
-        .select('*')
-        .eq('code', code)
-        .single();
+        if (result.success) {
+            currentUser = result.user;
+            localStorage.setItem('accessCode', code);
 
-    if (error || !data) {
+            if (currentUser.isMaster) {
+                showMasterView();
+            } else {
+                showStatusView();
+            }
+        }
+    } catch (error) {
         alert('Ungültiger Zugangscode');
         console.error('Login error:', error);
-        return;
     }
-
-    currentUser = {
-        code: code,
-        name: data.name,
-        isMaster: false,
-        tableName: data.table_name
-    };
-
-    localStorage.setItem('accessCode', code);
-    showStatusView();
 }
 
 function logout() {
@@ -148,11 +152,7 @@ function logout() {
     
     localStorage.removeItem('accessCode');
     currentUser = null;
-    
-    if (realtimeChannel) {
-        supabase.removeChannel(realtimeChannel);
-        realtimeChannel = null;
-    }
+    stopPolling();
     
     document.getElementById('loginScreen').classList.remove('hidden');
     document.getElementById('mainApp').classList.add('hidden');
@@ -175,79 +175,52 @@ async function showMasterView() {
     document.getElementById('statusView').classList.add('hidden');
     document.getElementById('ordersView').classList.add('hidden');
 
-    // Load all contractors
-    const { data: contractors, error } = await supabase
-        .from('contractors')
-        .select('*')
-        .order('name');
-
-    if (error) {
-        console.error('Error loading contractors:', error);
-        alert('Fehler beim Laden der Subunternehmer');
-        return;
-    }
-
-    const contractorList = document.getElementById('contractorList');
-    contractorList.innerHTML = '';
-
-    if (!contractors || contractors.length === 0) {
-        contractorList.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-icon">👥</div>
-                <div class="empty-text">Keine Subunternehmer gefunden</div>
-            </div>
-        `;
-        return;
-    }
-
-    for (const contractor of contractors) {
-        const stats = await getContractorStats(contractor.table_name);
-        
-        const card = document.createElement('div');
-        card.className = 'contractor-card';
-        card.innerHTML = `
-            <div class="contractor-name">${escapeHtml(contractor.name)}</div>
-            <div class="contractor-stats">
-                <div class="stat">
-                    <div class="stat-value" style="color: var(--primary);">${stats.open}</div>
-                    <div class="stat-label">Offen</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value" style="color: var(--success);">${stats.completed}</div>
-                    <div class="stat-label">Erledigt</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value" style="color: var(--danger);">${stats.rejected}</div>
-                    <div class="stat-label">Abgelehnt</div>
-                </div>
-            </div>
-        `;
-        card.addEventListener('click', () => selectContractor(contractor));
-        contractorList.appendChild(card);
-    }
-}
-
-async function getContractorStats(tableName) {
     try {
-        const { data, error } = await supabase
-            .from(tableName)
-            .select('status');
+        const result = await apiCall('/contractors');
+        const contractors = result.data;
 
-        if (error) {
-            console.error('Error getting stats:', error);
-            return { open: 0, completed: 0, rejected: 0 };
+        const contractorList = document.getElementById('contractorList');
+        contractorList.innerHTML = '';
+
+        if (!contractors || contractors.length === 0) {
+            contractorList.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">👥</div>
+                    <div class="empty-text">Keine Subunternehmer gefunden</div>
+                </div>
+            `;
+            return;
         }
 
-        const stats = {
-            open: data.filter(o => o.status === 'Offen').length,
-            completed: data.filter(o => o.status === 'Erledigt').length,
-            rejected: data.filter(o => o.status === 'Abgelehnt').length
-        };
-
-        return stats;
-    } catch (e) {
-        console.error('Stats error:', e);
-        return { open: 0, completed: 0, rejected: 0 };
+        for (const contractor of contractors) {
+            const statsResult = await apiCall(`/contractors/${contractor.table_name}/stats`);
+            const stats = statsResult.stats;
+            
+            const card = document.createElement('div');
+            card.className = 'contractor-card';
+            card.innerHTML = `
+                <div class="contractor-name">${escapeHtml(contractor.name)}</div>
+                <div class="contractor-stats">
+                    <div class="stat">
+                        <div class="stat-value" style="color: var(--primary);">${stats.open}</div>
+                        <div class="stat-label">Offen</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" style="color: var(--success);">${stats.completed}</div>
+                        <div class="stat-label">Erledigt</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" style="color: var(--danger);">${stats.rejected}</div>
+                        <div class="stat-label">Abgelehnt</div>
+                    </div>
+                </div>
+            `;
+            card.addEventListener('click', () => selectContractor(contractor));
+            contractorList.appendChild(card);
+        }
+    } catch (error) {
+        console.error('Error loading contractors:', error);
+        alert('Fehler beim Laden der Subunternehmer');
     }
 }
 
@@ -275,26 +248,17 @@ async function showStatusView() {
 
     await loadOrders();
     updateStatusCounts();
-    setupRealtime();
+    startPolling();
 }
 
 async function loadOrders() {
     try {
-        const { data, error } = await supabase
-            .from(currentUser.tableName)
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            console.error('Error loading orders:', error);
-            alert('Fehler beim Laden der Aufträge');
-            return;
-        }
-
-        allOrders = data || [];
+        const result = await apiCall(`/orders/${currentUser.tableName}`);
+        allOrders = result.data || [];
         updateStatusCounts();
-    } catch (e) {
-        console.error('Load orders error:', e);
+    } catch (error) {
+        console.error('Error loading orders:', error);
+        alert('Fehler beim Laden der Aufträge');
         allOrders = [];
     }
 }
@@ -312,48 +276,31 @@ function updateStatusCounts() {
 }
 
 // ============================================================================
-// REALTIME UPDATES
+// POLLING FÜR ECHTZEIT-UPDATES
 // ============================================================================
-function setupRealtime() {
-    // Remove existing channel if any
-    if (realtimeChannel) {
-        supabase.removeChannel(realtimeChannel);
-    }
-
-    // Subscribe to table changes
-    realtimeChannel = supabase
-        .channel(`orders_${currentUser.tableName}`)
-        .on('postgres_changes', 
-            { 
-                event: '*', 
-                schema: 'public', 
-                table: currentUser.tableName 
-            }, 
-            (payload) => {
-                console.log('Realtime update:', payload);
-                handleRealtimeUpdate(payload);
+function startPolling() {
+    stopPolling();
+    
+    pollingTimer = setInterval(async () => {
+        try {
+            const result = await apiCall(`/orders/${currentUser.tableName}`);
+            allOrders = result.data || [];
+            updateStatusCounts();
+            
+            // Refresh current view if in orders list
+            if (!document.getElementById('ordersView').classList.contains('hidden')) {
+                displayOrders(currentStatus);
             }
-        )
-        .subscribe();
+        } catch (error) {
+            console.error('Polling error:', error);
+        }
+    }, CONFIG.pollingInterval);
 }
 
-async function handleRealtimeUpdate(payload) {
-    if (payload.eventType === 'INSERT') {
-        allOrders.unshift(payload.new);
-    } else if (payload.eventType === 'UPDATE') {
-        const index = allOrders.findIndex(o => o.id === payload.new.id);
-        if (index !== -1) {
-            allOrders[index] = payload.new;
-        }
-    } else if (payload.eventType === 'DELETE') {
-        allOrders = allOrders.filter(o => o.id !== payload.old.id);
-    }
-
-    updateStatusCounts();
-    
-    // Refresh current view if in orders list
-    if (!document.getElementById('ordersView').classList.contains('hidden')) {
-        displayOrders(currentStatus);
+function stopPolling() {
+    if (pollingTimer) {
+        clearInterval(pollingTimer);
+        pollingTimer = null;
     }
 }
 
@@ -462,6 +409,7 @@ function backToStatus() {
         if (confirm('Zurück zur Subunternehmer-Übersicht?')) {
             currentUser.tableName = null;
             currentUser.selectedContractorName = null;
+            stopPolling();
             showMasterView();
             return;
         }
@@ -480,38 +428,19 @@ async function rejectOrder(orderId) {
     }
 
     try {
-        const { error } = await supabase
-            .from(currentUser.tableName)
-            .update({ status: 'Abgelehnt' })
-            .eq('id', orderId);
+        await apiCall(`/orders/${currentUser.tableName}/${orderId}/reject`, {
+            method: 'POST',
+            body: JSON.stringify({
+                contractorName: currentUser.name
+            })
+        });
 
-        if (error) {
-            alert('Fehler beim Ablehnen des Auftrags');
-            console.error(error);
-            return;
-        }
+        // Sofort neu laden
+        await loadOrders();
+        displayOrders(currentStatus);
 
-        // Send notification via n8n
-        const order = allOrders.find(o => o.id === orderId);
-        if (order && CONFIG.n8nWebhookUrl && CONFIG.n8nWebhookUrl !== 'IHRE_N8N_WEBHOOK_URL') {
-            try {
-                await fetch(CONFIG.n8nWebhookUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        orderId: orderId,
-                        customerEmail: order.customer_email,
-                        customerName: order.customer_name,
-                        status: 'rejected',
-                        contractorName: currentUser.name
-                    })
-                });
-            } catch (e) {
-                console.error('n8n notification error:', e);
-            }
-        }
-    } catch (e) {
-        console.error('Reject order error:', e);
+    } catch (error) {
+        console.error('Reject order error:', error);
         alert('Fehler beim Ablehnen des Auftrags');
     }
 }
@@ -554,24 +483,21 @@ async function completeOrder() {
     try {
         const signatureData = signaturePad.canvas.toDataURL();
 
-        const { error } = await supabase
-            .from(currentUser.tableName)
-            .update({ 
-                status: 'Erledigt',
-                signature: signatureData,
-                completed_at: new Date().toISOString()
+        await apiCall(`/orders/${currentUser.tableName}/${currentOrder.id}/complete`, {
+            method: 'POST',
+            body: JSON.stringify({
+                signature: signatureData
             })
-            .eq('id', currentOrder.id);
-
-        if (error) {
-            alert('Fehler beim Abschließen des Auftrags');
-            console.error(error);
-            return;
-        }
+        });
 
         closeModal();
-    } catch (e) {
-        console.error('Complete order error:', e);
+        
+        // Sofort neu laden
+        await loadOrders();
+        displayOrders(currentStatus);
+
+    } catch (error) {
+        console.error('Complete order error:', error);
         alert('Fehler beim Abschließen des Auftrags');
     }
 }
