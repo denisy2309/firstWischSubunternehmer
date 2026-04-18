@@ -179,6 +179,7 @@ async function showMasterView() {
     try {
         const result = await apiCall('/contractors');
         const contractors = result.data;
+        console.log(contractors);
 
         const contractorList = document.getElementById('contractorList');
         contractorList.innerHTML = '';
