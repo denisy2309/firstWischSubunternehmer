@@ -4,7 +4,7 @@
 const CONFIG = {
     supabaseUrl: 'IHRE_SUPABASE_URL',           // z.B. 'https://xxxxx.supabase.co'
     supabaseKey: 'IHRE_SUPABASE_ANON_KEY',      // Supabase Anon Key
-    masterCode: 'FW-2026-Master',             // Master-Zugangscode
+    masterCode: 'MASTER_CODE_HIER',             // Master-Zugangscode
     n8nWebhookUrl: 'IHRE_N8N_WEBHOOK_URL'       // n8n Webhook für Ablehnungen
 };
 
@@ -26,22 +26,58 @@ document.addEventListener('DOMContentLoaded', () => {
     initSupabase();
     checkStoredLogin();
     setupSignaturePad();
-    setupEnterKeyLogin();
+    setupEventListeners();
 });
 
-function initSupabase() {
-    supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
-}
-
-function setupEnterKeyLogin() {
+function setupEventListeners() {
+    // Login
+    const loginBtn = document.getElementById('loginBtn');
+    if (loginBtn) loginBtn.addEventListener('click', login);
+    
     const accessCodeInput = document.getElementById('accessCode');
     if (accessCodeInput) {
         accessCodeInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                login();
-            }
+            if (e.key === 'Enter') login();
         });
     }
+    
+    // Logout
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) logoutBtn.addEventListener('click', logout);
+    
+    // Back button
+    const backBtn = document.getElementById('backBtn');
+    if (backBtn) backBtn.addEventListener('click', backToStatus);
+    
+    // Status cards
+    document.querySelectorAll('.status-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const status = this.getAttribute('data-status');
+            if (status === 'open') showOrders('Offen');
+            else if (status === 'completed') showOrders('Erledigt');
+            else if (status === 'rejected') showOrders('Abgelehnt');
+        });
+    });
+    
+    // Modal
+    const modalOverlay = document.querySelector('.modal-overlay');
+    if (modalOverlay) modalOverlay.addEventListener('click', closeModal);
+    
+    const modalCloseBtn = document.getElementById('modalCloseBtn');
+    if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeModal);
+    
+    const modalCancelBtn = document.getElementById('modalCancelBtn');
+    if (modalCancelBtn) modalCancelBtn.addEventListener('click', closeModal);
+    
+    const completeOrderBtn = document.getElementById('completeOrderBtn');
+    if (completeOrderBtn) completeOrderBtn.addEventListener('click', completeOrder);
+    
+    const clearSignatureBtn = document.getElementById('clearSignatureBtn');
+    if (clearSignatureBtn) clearSignatureBtn.addEventListener('click', clearSignature);
+}
+
+function initSupabase() {
+    supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
 }
 
 // ============================================================================
@@ -165,7 +201,6 @@ async function showMasterView() {
         
         const card = document.createElement('div');
         card.className = 'contractor-card';
-        card.onclick = () => selectContractor(contractor);
         card.innerHTML = `
             <div class="contractor-name">${escapeHtml(contractor.name)}</div>
             <div class="contractor-stats">
@@ -183,6 +218,7 @@ async function showMasterView() {
                 </div>
             </div>
         `;
+        card.addEventListener('click', () => selectContractor(contractor));
         contractorList.appendChild(card);
     }
 }
@@ -363,8 +399,8 @@ function createOrderCard(order, status) {
     if (status === 'Offen') {
         actionsHtml = `
             <div class="order-actions">
-                <button class="btn btn-danger" onclick="rejectOrder(${order.id})">Ablehnen</button>
-                <button class="btn btn-success" onclick="openCompletionModal(${order.id})">Bearbeiten</button>
+                <button class="btn btn-danger reject-btn" data-order-id="${order.id}">Ablehnen</button>
+                <button class="btn btn-success edit-btn" data-order-id="${order.id}">Bearbeiten</button>
             </div>
         `;
     }
@@ -398,6 +434,21 @@ function createOrderCard(order, status) {
         </div>
         ${actionsHtml}
     `;
+
+    // Add event listeners for action buttons
+    if (status === 'Offen') {
+        setTimeout(() => {
+            const rejectBtn = card.querySelector('.reject-btn');
+            const editBtn = card.querySelector('.edit-btn');
+            
+            if (rejectBtn) {
+                rejectBtn.addEventListener('click', () => rejectOrder(order.id));
+            }
+            if (editBtn) {
+                editBtn.addEventListener('click', () => openCompletionModal(order.id));
+            }
+        }, 0);
+    }
 
     return card;
 }
