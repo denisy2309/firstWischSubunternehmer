@@ -1,10 +1,14 @@
+// Wrapper to prevent global scope conflicts
+(function() {
+'use strict';
+
 // ============================================================================
 // KONFIGURATION - Bitte anpassen
 // ============================================================================
 const CONFIG = {
     supabaseUrl: 'IHRE_SUPABASE_URL',           // z.B. 'https://xxxxx.supabase.co'
     supabaseKey: 'IHRE_SUPABASE_ANON_KEY',      // Supabase Anon Key
-    masterCode: '123',             // Master-Zugangscode
+    masterCode: 'MASTER_CODE_HIER',             // Master-Zugangscode
     n8nWebhookUrl: 'IHRE_N8N_WEBHOOK_URL'       // n8n Webhook für Ablehnungen
 };
 
@@ -702,3 +706,5 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
+
+})(); // End of IIFE wrapper
