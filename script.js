@@ -203,7 +203,7 @@ async function showMasterView() {
             const card = document.createElement('div');
             card.className = 'contractor-card';
             card.innerHTML = `
-                <div class="contractor-name">${escapeHtml(contractor.name)}</div>
+                <div class="contractor-name">${escapeHtml(contractor.Name)}</div>
                 <div class="contractor-stats">
                     <div class="stat">
                         <div class="stat-value" style="color: var(--primary);">${stats.open}</div>
