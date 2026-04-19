@@ -229,8 +229,8 @@ async function showMasterView() {
 }
 
 function selectContractor(contractor) {
-    currentUser.tableName = contractor.table_name;
-    currentUser.selectedContractorName = contractor.name;
+    currentUser.tableName = contractor.Auftragstabelle;
+    currentUser.selectedContractorName = contractor.Name;
     showStatusView();
 }
 
@@ -257,7 +257,6 @@ async function showStatusView() {
 
 async function loadOrders() {
     try {
-        console.log("Current User: ", currentUser);
         const result = await apiCall(`/orders/${currentUser.Auftragstabelle}`);
         allOrders = result.data || [];
         updateStatusCounts();
