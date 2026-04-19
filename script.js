@@ -195,7 +195,8 @@ async function showMasterView() {
         }
 
         for (const contractor of contractors) {
-            const statsResult = await apiCall(`/contractors/${contractor.table_name}/stats`);
+            console.log("Tabelle: ", contractor.Auftragstabelle);
+            const statsResult = await apiCall(`/contractors/${contractor.Auftragstabelle}/stats`);
             const stats = statsResult.stats;
             
             const card = document.createElement('div');
