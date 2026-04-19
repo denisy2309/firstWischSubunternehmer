@@ -257,7 +257,7 @@ async function showStatusView() {
 
 async function loadOrders() {
     try {
-        const result = await apiCall(`/orders/${currentUser.tableName}`);
+        const result = await apiCall(`/orders/${currentUser.Auftragstabelle}`);
         allOrders = result.data || [];
         updateStatusCounts();
     } catch (error) {
@@ -269,9 +269,9 @@ async function loadOrders() {
 
 function updateStatusCounts() {
     const counts = {
-        open: allOrders.filter(o => o.status === 'Offen').length,
-        completed: allOrders.filter(o => o.status === 'Erledigt').length,
-        rejected: allOrders.filter(o => o.status === 'Abgelehnt').length
+        open: allOrders.filter(o => o.Status === 'Offen').length,
+        completed: allOrders.filter(o => o.Status === 'Erledigt').length,
+        rejected: allOrders.filter(o => o.Status === 'Abgelehnt').length
     };
 
     document.getElementById('countOpen').textContent = counts.open;
@@ -287,7 +287,7 @@ function startPolling() {
     
     pollingTimer = setInterval(async () => {
         try {
-            const result = await apiCall(`/orders/${currentUser.tableName}`);
+            const result = await apiCall(`/orders/${currentUser.Auftragstabelle}`);
             allOrders = result.data || [];
             updateStatusCounts();
             
@@ -321,7 +321,7 @@ function showOrders(status) {
 
 function displayOrders(status) {
     const ordersList = document.getElementById('ordersList');
-    const filteredOrders = allOrders.filter(o => o.status === status);
+    const filteredOrders = allOrders.filter(o => o.Status === status);
 
     if (filteredOrders.length === 0) {
         ordersList.innerHTML = `
@@ -345,7 +345,7 @@ function createOrderCard(order, status) {
     const card = document.createElement('div');
     card.className = 'order-card';
     
-    const services = parseServices(order.services);
+    const services = parseServices(order.Dienstleistungen);
     const servicesHtml = services.map(s => `
         <div class="service-item">${escapeHtml(s)}</div>
     `).join('');
@@ -363,24 +363,24 @@ function createOrderCard(order, status) {
     card.innerHTML = `
         <div class="order-header">
             <div class="order-id">Auftrag #${order.id}</div>
-            <div class="order-date">${formatDate(order.created_at)}</div>
+            <div class="order-date">${formatDate(order.Auftragseingang)}</div>
         </div>
         <div class="order-details">
             <div class="detail-item">
                 <div class="detail-label">Kunde</div>
-                <div class="detail-value">${escapeHtml(order.customer_name || 'N/A')}</div>
+                <div class="detail-value">${escapeHtml(order.Kunde.Name || 'N/A')}</div>
             </div>
             <div class="detail-item">
                 <div class="detail-label">Adresse</div>
-                <div class="detail-value">${escapeHtml(order.customer_address || 'N/A')}</div>
+                <div class="detail-value">${escapeHtml(order.Kunde.Strasse || 'N/A')}</div>
             </div>
             <div class="detail-item">
                 <div class="detail-label">Telefon</div>
-                <div class="detail-value">${escapeHtml(order.customer_phone || 'N/A')}</div>
+                <div class="detail-value">${escapeHtml(order.Kunde.Telefonnummer || 'N/A')}</div>
             </div>
             <div class="detail-item">
                 <div class="detail-label">Termin</div>
-                <div class="detail-value">${escapeHtml(order.appointment_date || 'N/A')}</div>
+                <div class="detail-value">${escapeHtml(order.Datum || 'N/A')}</div>
             </div>
         </div>
         <div class="order-services">
