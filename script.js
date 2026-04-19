@@ -258,7 +258,7 @@ async function showStatusView() {
 async function loadOrders() {
     try {
         console.log("Current User: ", currentUser);
-        const result = await apiCall(`/orders/${currentUser.Auftragstabelle}`);
+        const result = await apiCall(`/orders/${currentUser.tableName}`);
         allOrders = result.data || [];
         updateStatusCounts();
     } catch (error) {
