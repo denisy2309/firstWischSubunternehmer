@@ -288,7 +288,7 @@ function startPolling() {
     
     pollingTimer = setInterval(async () => {
         try {
-            const result = await apiCall(`/orders/${currentUser.Auftragstabelle}`);
+            const result = await apiCall(`/orders/${currentUser.tableName}`);
             allOrders = result.data || [];
             updateStatusCounts();
             
@@ -350,6 +350,7 @@ function createOrderCard(order, status) {
     const servicesHtml = services.map(s => `
         <div class="service-item">${escapeHtml(s)}</div>
     `).join('');
+    console.log("Kunde: ", order.Kunde);
 
     let actionsHtml = '';
     if (status === 'Offen') {
@@ -369,7 +370,7 @@ function createOrderCard(order, status) {
         <div class="order-details">
             <div class="detail-item">
                 <div class="detail-label">Kunde</div>
-                <div class="detail-value">${escapeHtml(order.Kunde.Name || 'N/A')}</div>
+                <div class="detail-value">${escapeHtml(order.Kunde || 'N/A')}</div>
             </div>
             <div class="detail-item">
                 <div class="detail-label">Adresse</div>
