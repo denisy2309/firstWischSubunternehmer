@@ -370,15 +370,15 @@ function createOrderCard(order, status) {
         <div class="order-details">
             <div class="detail-item">
                 <div class="detail-label">Kunde</div>
-                <div class="detail-value">${escapeHtml(order.Kunde || 'N/A')}</div>
+                <div class="detail-value">${escapeHtml(order.Kunde?.Name || 'N/A')}</div>
             </div>
             <div class="detail-item">
                 <div class="detail-label">Adresse</div>
-                <div class="detail-value">${escapeHtml(order.Kunde.Strasse || 'N/A')}</div>
+                <div class="detail-value">${escapeHtml(order.Kunde?.Strasse || 'N/A')}</div>
             </div>
             <div class="detail-item">
                 <div class="detail-label">Telefon</div>
-                <div class="detail-value">${escapeHtml(order.Kunde.Telefonnummer || 'N/A')}</div>
+                <div class="detail-value">${escapeHtml(order.Kunde?.Telefonnummer || 'N/A')}</div>
             </div>
             <div class="detail-item">
                 <div class="detail-label">Termin</div>
