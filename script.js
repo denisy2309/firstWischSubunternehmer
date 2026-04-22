@@ -374,11 +374,15 @@ function createOrderCard(order, status) {
             </div>
             <div class="detail-item">
                 <div class="detail-label">Adresse</div>
-                <div class="detail-value">${escapeHtml(order.Kunde?.Strasse || 'N/A')}</div>
+                <div class="detail-value">${escapeHtml(order.Kunde?.Strasse + ' ' + order.Kunde?.Hausnr + ', ' + order.Kunde?.PLZ + ' ' + order.Kunde?.Stadt || 'N/A')}</div>
             </div>
             <div class="detail-item">
                 <div class="detail-label">Telefon</div>
                 <div class="detail-value">${escapeHtml(order.Kunde?.Telefonnummer || 'N/A')}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Email-Adresse</div>
+                <div class="detail-value">${escapeHtml(order.Kunde?.E-Mail-Adresse || 'N/A')}</div>
             </div>
             <div class="detail-item">
                 <div class="detail-label">Termin</div>
