@@ -621,19 +621,19 @@ function formatDate(dateString, inputFormat = 'YYYY-MM-DD') {
         }
         
         // Validierung
-        const d = parseInt(day);
-        const m = parseInt(month);
-        const y = parseInt(year);
+        const d = parseInt(parts.day);
+        const m = parseInt(parts.month);
+        const y = parseInt(parts.year);
         
         if (d < 1 || d > 31 || m < 1 || m > 12 || y < 1900) {
             return 'N/A';
         }
         
         // Zero-Padding für einstellige Zahlen
-        const paddedDay = day.padStart(2, '0');
-        const paddedMonth = month.padStart(2, '0');
+        const paddedDay = parts.day.padStart(2, '0');
+        const paddedMonth = parts.month.padStart(2, '0');
         
-        return `${paddedDay}.${paddedMonth}.${year}`;
+        return `${paddedDay}.${paddedMonth}.${parts.year}`;
         
     } catch (error) {
         console.error('Date formatting error:', error);
