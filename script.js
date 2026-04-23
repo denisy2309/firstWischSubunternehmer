@@ -365,7 +365,7 @@ function createOrderCard(order, status) {
     card.innerHTML = `
         <div class="order-header">
             <div class="order-id">Auftrag #${order.id}</div>
-            <div class="order-date">${formatDate(order.Auftragseingang)}</div>
+            <div class="order-date">${formatDate(order.Auftragseingang, 'YYYY-DD-MM')}</div>
         </div>
         <div class="order-details">
             <div class="detail-item">
@@ -386,7 +386,7 @@ function createOrderCard(order, status) {
             </div>
             <div class="detail-item">
                 <div class="detail-label">Termin</div>
-                <div class="detail-value">${escapeHtml(formatDate(order.Datum) || 'N/A')}</div>
+                <div class="detail-value">${escapeHtml(formatDate(order.Datum, 'YYYY-MM-DD') || 'N/A')}</div>
             </div>
         </div>
         <div class="order-services">
@@ -601,7 +601,7 @@ function clearSignature() {
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
-function formatDate(dateString, inputFormat = 'YYYY-MM-DD') {
+function formatDate(dateString, inputFormat) {
     console.log("Formatieren von Datum: ", dateString); 
     if (!dateString) return 'N/A';
 
@@ -609,8 +609,11 @@ function formatDate(dateString, inputFormat = 'YYYY-MM-DD') {
         let day, month, year;
 
         // Datum extrahieren (z.B. von ISO-String)
-        const parts = dateString.split(/[-T\s]/)[0].split('-');
+        const raw = dateString.split(/[T\s]/)[0];
 
+        // Split mit mehreren möglichen Trennern
+        const parts = raw.split(/[-./]/);
+        
         if (inputFormat === 'YYYY-MM-DD') {
             [year, month, day] = parts;
         } else if (inputFormat === 'YYYY-DD-MM') {
