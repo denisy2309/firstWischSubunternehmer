@@ -619,6 +619,8 @@ function formatDate(dateString, inputFormat = 'YYYY-MM-DD') {
             return dateString;
         }
 
+        console.log(`Parsed date - Year: ${year}, Month: ${month}, Day: ${day}`);
+
         // In Zahlen umwandeln
         const d = parseInt(day, 10);
         const m = parseInt(month, 10);
