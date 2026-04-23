@@ -602,7 +602,7 @@ function clearSignature() {
 // UTILITY FUNCTIONS
 // ============================================================================
 function formatDate(dateString, inputFormat = 'YYYY-MM-DD') {
-    console.log("Formatieren von Datum: ", dateString);
+    console.log("Formatieren von Datum: ", dateString); 
     if (!dateString) return 'N/A';
 
     try {
