@@ -603,38 +603,37 @@ function clearSignature() {
 // ============================================================================
 function formatDate(dateString, inputFormat = 'YYYY-MM-DD') {
     if (!dateString) return 'N/A';
-    
+
     try {
         let day, month, year;
-        
-        // Split das Datum
+
+        // Datum extrahieren (z.B. von ISO-String)
         const parts = dateString.split(/[-T\s]/)[0].split('-');
-        
+
         if (inputFormat === 'YYYY-MM-DD') {
-            // Standard: Jahr-Monat-Tag
             [year, month, day] = parts;
         } else if (inputFormat === 'YYYY-DD-MM') {
-            // Vertauscht: Jahr-Tag-Monat
             [year, day, month] = parts;
         } else {
-            return dateString; // Unbekanntes Format
+            return dateString;
         }
-        
+
+        // In Zahlen umwandeln
+        const d = parseInt(day, 10);
+        const m = parseInt(month, 10);
+        const y = parseInt(year, 10);
+
         // Validierung
-        const d = parseInt(parts.day);
-        const m = parseInt(parts.month);
-        const y = parseInt(parts.year);
-        
-        if (d < 1 || d > 31 || m < 1 || m > 12 || y < 1900) {
+        if (!d || !m || !y || d < 1 || d > 31 || m < 1 || m > 12 || y < 1900) {
             return 'N/A';
         }
-        
-        // Zero-Padding für einstellige Zahlen
-        const paddedDay = parts.day.padStart(2, '0');
-        const paddedMonth = parts.month.padStart(2, '0');
-        
-        return `${paddedDay}.${paddedMonth}.${parts.year}`;
-        
+
+        // Padding (jetzt korrekt auf Strings!)
+        const paddedDay = String(d).padStart(2, '0');
+        const paddedMonth = String(m).padStart(2, '0');
+
+        return `${paddedDay}.${paddedMonth}.${y}`;
+
     } catch (error) {
         console.error('Date formatting error:', error);
         return 'N/A';
