@@ -386,7 +386,7 @@ function createOrderCard(order, status) {
             </div>
             <div class="detail-item">
                 <div class="detail-label">Termin</div>
-                <div class="detail-value">${escapeHtml(formatDate(order.Datum, 'YYYY-MM-DD') || 'N/A')}</div>
+                <div class="detail-value">${escapeHtml(formatDate(order.Datum, 'YYYY-MM-DD') + 'um' + order.Uhrzeit || 'N/A')}</div>
             </div>
         </div>
         <div class="order-services">
@@ -613,7 +613,7 @@ function formatDate(dateString, inputFormat) {
 
         // Split mit mehreren möglichen Trennern
         const parts = raw.split(/[-./]/);
-        
+
         if (inputFormat === 'YYYY-MM-DD') {
             [year, month, day] = parts;
         } else if (inputFormat === 'YYYY-DD-MM') {
