@@ -386,7 +386,7 @@ function createOrderCard(order, status) {
             </div>
             <div class="detail-item">
                 <div class="detail-label">Termin</div>
-                <div class="detail-value">${escapeHtml(order.Datum || 'N/A')}</div>
+                <div class="detail-value">${escapeHtml(formatDate(order.Datum) || 'N/A')}</div>
             </div>
         </div>
         <div class="order-services">
@@ -601,20 +601,43 @@ function clearSignature() {
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
-function formatDate(dateString) {
+function formatDate(dateString, inputFormat = 'YYYY-MM-DD') {
     if (!dateString) return 'N/A';
     
     try {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('de-DE', { 
-            year: 'numeric', 
-            month: '2-digit', 
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    } catch (e) {
-        return dateString;
+        let day, month, year;
+        
+        // Split das Datum
+        const parts = dateString.split(/[-T\s]/)[0].split('-');
+        
+        if (inputFormat === 'YYYY-MM-DD') {
+            // Standard: Jahr-Monat-Tag
+            [year, month, day] = parts;
+        } else if (inputFormat === 'YYYY-DD-MM') {
+            // Vertauscht: Jahr-Tag-Monat
+            [year, day, month] = parts;
+        } else {
+            return dateString; // Unbekanntes Format
+        }
+        
+        // Validierung
+        const d = parseInt(day);
+        const m = parseInt(month);
+        const y = parseInt(year);
+        
+        if (d < 1 || d > 31 || m < 1 || m > 12 || y < 1900) {
+            return 'N/A';
+        }
+        
+        // Zero-Padding für einstellige Zahlen
+        const paddedDay = day.padStart(2, '0');
+        const paddedMonth = month.padStart(2, '0');
+        
+        return `${paddedDay}.${paddedMonth}.${year}`;
+        
+    } catch (error) {
+        console.error('Date formatting error:', error);
+        return 'N/A';
     }
 }
 
