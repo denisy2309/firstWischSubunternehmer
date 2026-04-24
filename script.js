@@ -671,6 +671,23 @@ function formatTime(timeString) {
     }
 }
 
+function parseServices(services) {
+    if (Array.isArray(services)) {
+        return services;
+    }
+    
+    if (typeof services === 'string') {
+        try {
+            const parsed = JSON.parse(services);
+            return Array.isArray(parsed) ? parsed : [services];
+        } catch (e) {
+            return [services];
+        }
+    }
+    
+    return [];
+}
+
 function escapeHtml(text) {
     if (!text) return '';
     
