@@ -49,6 +49,9 @@ function setupEventListeners() {
     // Back button
     const backBtn = document.getElementById('backBtn');
     if (backBtn) backBtn.addEventListener('click', backToStatus);
+
+    const backToMasterBtn = document.getElementById('backToMasterBtn');
+    if (backToMasterBtn) backToMasterBtn.addEventListener('click', backToMaster);
     
     // Status cards
     document.querySelectorAll('.status-card').forEach(card => {
@@ -244,6 +247,11 @@ async function showStatusView() {
     document.getElementById('statusView').classList.remove('hidden');
     document.getElementById('ordersView').classList.add('hidden');
 
+    const statusViewBackBtn = document.getElementById('statusViewBackBtn');
+    if (statusViewBackBtn) {
+        statusViewBackBtn.style.display = currentUser.isMaster ? 'flex' : 'none';
+    }
+
     if (currentUser.isMaster && currentUser.selectedContractorName) {
         document.getElementById('userName').textContent = `Master → ${currentUser.selectedContractorName}`;
     } else {
@@ -415,18 +423,15 @@ function createOrderCard(order, status) {
 }
 
 function backToStatus() {
-    if (currentUser.isMaster && currentUser.selectedContractorName) {
-        if (confirm('Zurück zur Subunternehmer-Übersicht?')) {
-            currentUser.tableName = null;
-            currentUser.selectedContractorName = null;
-            stopPolling();
-            showMasterView();
-            return;
-        }
-    }
-    
     document.getElementById('ordersView').classList.add('hidden');
     document.getElementById('statusView').classList.remove('hidden');
+}
+
+function backToMaster() {
+    currentUser.tableName = null;
+    currentUser.selectedContractorName = null;
+    stopPolling();
+    showMasterView();
 }
 
 // ============================================================================
