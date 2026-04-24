@@ -394,7 +394,7 @@ function createOrderCard(order, status) {
             </div>
             <div class="detail-item">
                 <div class="detail-label">Termin</div>
-                <div class="detail-value">${escapeHtml(formatDate(order.Datum, 'YYYY-MM-DD') + ' um ' + formatTime(order.Uhrzeit) + ' (Dauer: ' + order.Geschaetzte_Gesamtdauer + ' )' || 'N/A')}</div>
+                <div class="detail-value">${escapeHtml(formatDate(order.Datum, 'YYYY-MM-DD') + ' um ' + formatTime(order.Uhrzeit) + ' (Dauer: ' + order.Geschaetzte_Gesamtdauer + ')' || 'N/A')}</div>
             </div>
         </div>
         <div class="order-services">
