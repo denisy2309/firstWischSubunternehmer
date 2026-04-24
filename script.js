@@ -672,6 +672,7 @@ function formatTime(timeString) {
 }
 
 function parseServices(services) {
+    console.log("Parsing services: ", services);
     if (Array.isArray(services)) {
         return services;
     }
