@@ -671,7 +671,7 @@ function formatTime(timeString) {
     }
 }
 
-function formatServices(services) {
+function parseServices(services) {
     if (!Array.isArray(services) || services.length === 0) {
         return 'Keine Dienstleistungen';
     }
