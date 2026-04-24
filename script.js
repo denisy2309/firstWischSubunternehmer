@@ -671,22 +671,19 @@ function formatTime(timeString) {
     }
 }
 
-function parseServices(services) {
-    console.log("Parsing services: ", services);
-    if (Array.isArray(services)) {
-        return services;
+function formatServices(services) {
+    if (!Array.isArray(services) || services.length === 0) {
+        return 'Keine Dienstleistungen';
     }
-    
-    if (typeof services === 'string') {
-        try {
-            const parsed = JSON.parse(services);
-            return Array.isArray(parsed) ? parsed : [services];
-        } catch (e) {
-            return [services];
-        }
-    }
-    
-    return [];
+
+    return services
+        .map(s => {
+            if (!s.name || !s.quantity) return null;
+
+            return `${s.name} × ${s.quantity}`;
+        })
+        .filter(Boolean)
+        .join('\n'); // oder ', ' für Inline
 }
 
 function escapeHtml(text) {
