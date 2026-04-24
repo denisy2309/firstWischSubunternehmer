@@ -356,8 +356,8 @@ function createOrderCard(order, status) {
     if (status === 'Offen') {
         actionsHtml = `
             <div class="order-actions">
-                <button class="btn btn-danger reject-btn" data-order-id="${order.id}">Ablehnen</button>
                 <button class="btn btn-success edit-btn" data-order-id="${order.id}">Bearbeiten</button>
+                <button class="btn btn-danger reject-btn" data-order-id="${order.id}">Ablehnen</button>
             </div>
         `;
     }
