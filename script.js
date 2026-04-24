@@ -386,7 +386,7 @@ function createOrderCard(order, status) {
             </div>
             <div class="detail-item">
                 <div class="detail-label">Termin</div>
-                <div class="detail-value">${escapeHtml(formatDate(order.Datum, 'YYYY-MM-DD') + 'um' + order.Uhrzeit || 'N/A')}</div>
+                <div class="detail-value">${escapeHtml(formatDate(order.Datum, 'YYYY-MM-DD') + ' um ' + formatTime(order.Uhrzeit) || 'N/A')}</div>
             </div>
         </div>
         <div class="order-services">
@@ -608,11 +608,10 @@ function formatDate(dateString, inputFormat) {
     try {
         let day, month, year;
 
-        // Datum extrahieren (z.B. von ISO-String)
-        const raw = dateString.split(/[T\s]/)[0];
+        // Datum + Zeit trennen
+        const [datePart, timePart] = dateString.split(/[T\s]/);
 
-        // Split mit mehreren möglichen Trennern
-        const parts = raw.split(/[-./]/);
+        const parts = datePart.split(/[-./]/);
 
         if (inputFormat === 'YYYY-MM-DD') {
             [year, month, day] = parts;
@@ -622,23 +621,30 @@ function formatDate(dateString, inputFormat) {
             return dateString;
         }
 
-        console.log(`Parsed date - Year: ${year}, Month: ${month}, Day: ${day}`); 
+        console.log(`Parsed date - Year: ${year}, Month: ${month}, Day: ${day}`);
 
-        // In Zahlen umwandeln
         const d = parseInt(day, 10);
         const m = parseInt(month, 10);
         const y = parseInt(year, 10);
 
-        // Validierung
         if (!d || !m || !y || d < 1 || d > 31 || m < 1 || m > 12 || y < 1900) {
             return 'N/A';
         }
 
-        // Padding (jetzt korrekt auf Strings!)
         const paddedDay = String(d).padStart(2, '0');
         const paddedMonth = String(m).padStart(2, '0');
 
-        return `${paddedDay}.${paddedMonth}.${y}`;
+        let result = `${paddedDay}.${paddedMonth}.${y}`;
+
+        // Zeit verarbeiten (falls vorhanden)
+        if (timePart) {
+            const formattedTime = formatTime(timePart);
+            if (formattedTime) {
+                result += ` ${formattedTime}`;
+            }
+        }
+
+        return result;
 
     } catch (error) {
         console.error('Date formatting error:', error);
@@ -646,21 +652,23 @@ function formatDate(dateString, inputFormat) {
     }
 }
 
-function parseServices(services) {
-    if (Array.isArray(services)) {
-        return services;
+
+// Helper: HH:MM:SS → HH:MM
+function formatTime(timeString) {
+    if (!timeString) return null;
+
+    try {
+        const [h, m] = timeString.split(':');
+
+        if (h === undefined || m === undefined) return null;
+
+        const hh = String(parseInt(h, 10)).padStart(2, '0');
+        const mm = String(parseInt(m, 10)).padStart(2, '0');
+
+        return `${hh}:${mm}`;
+    } catch {
+        return null;
     }
-    
-    if (typeof services === 'string') {
-        try {
-            const parsed = JSON.parse(services);
-            return Array.isArray(parsed) ? parsed : [services];
-        } catch (e) {
-            return [services];
-        }
-    }
-    
-    return [];
 }
 
 function escapeHtml(text) {
