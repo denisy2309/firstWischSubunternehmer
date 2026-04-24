@@ -346,7 +346,7 @@ function createOrderCard(order, status) {
     const card = document.createElement('div');
     card.className = 'order-card';
     
-    const services = order.Dienstleistungen;
+    const services = parseServices(order.Dienstleistungen);
     const servicesHtml = services.map(s => `
         <div class="service-item">${escapeHtml(s.name + ' × ' + s.quantity)}</div>
     `).join('');
@@ -463,7 +463,7 @@ function openCompletionModal(orderId) {
         return;
     }
 
-    const services = currentOrder.Dienstleistungen;
+    const services = parseServices(currentOrder.Dienstleistungen);
     const servicesHtml = services.map(s => `
         <div class="service-item">${escapeHtml(s.name + ' × ' + s.quantity)}</div>
     `).join('');
@@ -669,6 +669,24 @@ function formatTime(timeString) {
     } catch {
         return null;
     }
+}
+
+function parseServices(services) {
+    console.log("Parsing services: ", services);
+    if (Array.isArray(services)) {
+        return services;
+    }
+    
+    if (typeof services === 'string') {
+        try {
+            const parsed = JSON.parse(services);
+            return Array.isArray(parsed) ? parsed : [services];
+        } catch (e) {
+            return [services];
+        }
+    }
+    
+    return [];
 }
 
 function escapeHtml(text) {
