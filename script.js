@@ -475,8 +475,12 @@ function openCompletionModal(orderId) {
 
     document.getElementById('modalServices').innerHTML = servicesHtml;
     document.getElementById('confirmServices').checked = false;
-    clearSignature();
     document.getElementById('completionModal').classList.add('active');
+
+    setTimeout(() => {
+        setupSignaturePad();
+        clearSignature();
+    }, 100);
 }
 
 function closeModal() {
