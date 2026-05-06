@@ -563,6 +563,8 @@ async function rejectOrder(orderId) {
             })
         });
 
+        await customAlert('Der Auftrag wurde erfolgreich abgelehnt und der Kunde wurde benachrichtigt.', 'Auftrag erfolgreich abgelehnt', 'success');
+
         // Sofort neu laden
         await loadOrders();
         displayOrders(currentStatus);
@@ -623,6 +625,8 @@ async function completeOrder() {
         });
 
         closeModal();
+
+        await customAlert('Der Auftrag wurde erfolgreich abgeschlossen und die Unterschrift wurde gespeichert.', 'Auftrag erfolgreich abgeschlossen', 'success');
         
         // Sofort neu laden
         await loadOrders();
