@@ -22,6 +22,86 @@ let pollingTimer = null;
 let lastUpdateTimestamp = null;
 
 // ============================================================================
+// CUSTOM ALERT/CONFIRM SYSTEM
+// ============================================================================
+
+/**
+ * Zeigt eine eigene Alert-Nachricht
+ * @param {string} message - Die Nachricht
+ * @param {string} title - Der Titel (optional)
+ */
+function customAlert(message, title = 'Hinweis') {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('customAlertModal');
+        const titleEl = document.getElementById('alertTitle');
+        const messageEl = document.getElementById('alertMessage');
+        const footerEl = document.getElementById('alertFooter');
+
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        
+        footerEl.innerHTML = `
+            <button class="btn btn-primary" id="alertOkBtn" style="width: 100%;">OK</button>
+        `;
+
+        modal.classList.add('active');
+
+        const okBtn = document.getElementById('alertOkBtn');
+        const closeAlert = () => {
+            modal.classList.remove('active');
+            resolve();
+        };
+
+        okBtn.onclick = closeAlert;
+    });
+}
+
+/**
+ * Zeigt eine eigene Confirm-Nachricht
+ * @param {string} message - Die Nachricht
+ * @param {string} title - Der Titel (optional)
+ * @returns {Promise<boolean>} - true wenn bestätigt, false wenn abgebrochen
+ */
+function customConfirm(message, title = 'Bestätigung') {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('customAlertModal');
+        const titleEl = document.getElementById('alertTitle');
+        const messageEl = document.getElementById('alertMessage');
+        const footerEl = document.getElementById('alertFooter');
+
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        
+        footerEl.innerHTML = `
+            <button class="btn btn-secondary" id="alertCancelBtn">Abbrechen</button>
+            <button class="btn btn-primary" id="alertConfirmBtn">Bestätigen</button>
+        `;
+
+        modal.classList.add('active');
+
+        const confirmBtn = document.getElementById('alertConfirmBtn');
+        const cancelBtn = document.getElementById('alertCancelBtn');
+        
+        const closeWithResult = (result) => {
+            modal.classList.remove('active');
+            resolve(result);
+        };
+
+        confirmBtn.onclick = () => closeWithResult(true);
+        cancelBtn.onclick = () => closeWithResult(false);
+        
+        // ESC-Taste für Abbrechen
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                closeWithResult(false);
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        document.addEventListener('keydown', escHandler);
+    });
+}
+
+// ============================================================================
 // INITIALISIERUNG
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
@@ -123,7 +203,7 @@ async function login() {
     const code = document.getElementById('accessCode').value.trim();
     
     if (!code) {
-        alert('Bitte geben Sie einen Zugangscode ein');
+        await customAlert('Bitte geben Sie einen Zugangscode ein');
         return;
     }
 
@@ -144,13 +224,14 @@ async function login() {
             }
         }
     } catch (error) {
-        alert('Ungültiger Zugangscode');
+        await customAlert('Ungültiger Zugangscode', 'Anmeldefehler');
         console.error('Login error:', error);
     }
 }
 
-function logout() {
-    if (!confirm('Möchten Sie sich wirklich abmelden?')) {
+async function logout() {
+    const confirmed = await customConfirm('Möchten Sie sich wirklich abmelden?', 'Abmelden');
+    if (!confirmed) {
         return;
     }
     
@@ -227,7 +308,7 @@ async function showMasterView() {
         }
     } catch (error) {
         console.error('Error loading contractors:', error);
-        alert('Fehler beim Laden der Subunternehmer');
+        await customAlert('Fehler beim Laden der Subunternehmer', 'Fehler');
     }
 }
 
@@ -271,7 +352,7 @@ async function loadOrders() {
         updateStatusCounts();
     } catch (error) {
         console.error('Error loading orders:', error);
-        alert('Fehler beim Laden der Aufträge');
+        await customAlert('Fehler beim Laden der Aufträge', 'Fehler');
         allOrders = [];
     }
 }
@@ -438,7 +519,8 @@ function backToMaster() {
 // ORDER ACTIONS
 // ============================================================================
 async function rejectOrder(orderId) {
-    if (!confirm('Möchten Sie diesen Auftrag wirklich ablehnen?')) {
+    const confirmed = await customConfirm('Möchten Sie diesen Auftrag wirklich ablehnen?', 'Auftrag ablehnen');
+    if (!confirmed) {
         return;
     }
 
@@ -456,15 +538,15 @@ async function rejectOrder(orderId) {
 
     } catch (error) {
         console.error('Reject order error:', error);
-        alert('Fehler beim Ablehnen des Auftrags');
+        await customAlert('Fehler beim Ablehnen des Auftrags', 'Fehler');
     }
 }
 
-function openCompletionModal(orderId) {
+async function openCompletionModal(orderId) {
     currentOrder = allOrders.find(o => o.id === orderId);
     
     if (!currentOrder) {
-        alert('Auftrag nicht gefunden');
+        await customAlert('Auftrag nicht gefunden', 'Fehler');
         return;
     }
 
@@ -490,12 +572,12 @@ function closeModal() {
 
 async function completeOrder() {
     if (!document.getElementById('confirmServices').checked) {
-        alert('Bitte bestätigen Sie, dass alle Dienstleistungen durchgeführt wurden');
+        await customAlert('Bitte bestätigen Sie, dass alle Dienstleistungen durchgeführt wurden');
         return;
     }
 
     if (!signaturePad.hasSignature) {
-        alert('Bitte lassen Sie den Kunden unterschreiben');
+        await customAlert('Bitte lassen Sie den Kunden unterschreiben');
         return;
     }
 
@@ -517,7 +599,7 @@ async function completeOrder() {
 
     } catch (error) {
         console.error('Complete order error:', error);
-        alert('Fehler beim Abschließen des Auftrags');
+        await customAlert('Fehler beim Abschließen des Auftrags', 'Fehler');
     }
 }
 

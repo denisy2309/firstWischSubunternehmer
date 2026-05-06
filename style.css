@@ -754,3 +754,42 @@ input:focus {
         gap: 0.5rem;
     }
 }
+
+/* Custom Alert/Confirm Styling */
+#customAlertModal .modal-content {
+    animation: alertSlideIn 0.3s ease;
+}
+
+@keyframes alertSlideIn {
+    from {
+        transform: translateY(-30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+#alertMessage {
+    color: var(--gray-700);
+    text-align: center;
+    padding: 1rem 0;
+}
+
+#customAlertModal .modal-footer {
+    gap: 1rem;
+}
+
+/* Icon-Styling für verschiedene Alert-Typen (optional) */
+#customAlertModal[data-type="error"] .modal-header h2 {
+    color: var(--danger);
+}
+
+#customAlertModal[data-type="success"] .modal-header h2 {
+    color: var(--success);
+}
+
+#customAlertModal[data-type="warning"] .modal-header h2 {
+    color: var(--warning);
+}
