@@ -411,7 +411,17 @@ function showOrders(status) {
 
 function displayOrders(status) {
     const ordersList = document.getElementById('ordersList');
-    const filteredOrders = allOrders.filter(o => o.Status === status);
+    let filteredOrders = allOrders.filter(o => o.Status === status);
+
+    // Für Abgelehnt und Erledigt nach Datum + Uhrzeit absteigend sortieren
+    if (status === 'Abgelehnt' || status === 'Erledigt') {
+        filteredOrders.sort((a, b) => {
+            const dateA = new Date(`${a.Datum}T${a.Uhrzeit}`);
+            const dateB = new Date(`${b.Datum}T${b.Uhrzeit}`);
+
+            return dateB - dateA; // descending
+        });
+    }
 
     if (filteredOrders.length === 0) {
         ordersList.innerHTML = `
