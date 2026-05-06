@@ -29,16 +29,26 @@ let lastUpdateTimestamp = null;
  * Zeigt eine eigene Alert-Nachricht
  * @param {string} message - Die Nachricht
  * @param {string} title - Der Titel (optional)
+ * @param {string} type - Der Typ der Meldung (error, success, warning, info)
  */
-function customAlert(message, title = 'Hinweis') {
+function customAlert(message, title = 'Hinweis', type = 'info') {
     return new Promise((resolve) => {
         const modal = document.getElementById('customAlertModal');
         const titleEl = document.getElementById('alertTitle');
         const messageEl = document.getElementById('alertMessage');
         const footerEl = document.getElementById('alertFooter');
 
-        titleEl.textContent = title;
+        // Icon basierend auf Typ
+        const icons = {
+            error: '❌',
+            success: '✅',
+            warning: '⚠️',
+            info: 'ℹ️'
+        };
+
+        titleEl.innerHTML = `${icons[type] || icons.info} ${title}`;
         messageEl.textContent = message;
+        modal.setAttribute('data-type', type);
         
         footerEl.innerHTML = `
             <button class="btn btn-primary" id="alertOkBtn" style="width: 100%;">OK</button>
@@ -49,6 +59,7 @@ function customAlert(message, title = 'Hinweis') {
         const okBtn = document.getElementById('alertOkBtn');
         const closeAlert = () => {
             modal.classList.remove('active');
+            modal.removeAttribute('data-type');
             resolve();
         };
 
@@ -62,15 +73,24 @@ function customAlert(message, title = 'Hinweis') {
  * @param {string} title - Der Titel (optional)
  * @returns {Promise<boolean>} - true wenn bestätigt, false wenn abgebrochen
  */
-function customConfirm(message, title = 'Bestätigung') {
+function customConfirm(message, title = 'Bestätigung', type = 'warning') {
     return new Promise((resolve) => {
         const modal = document.getElementById('customAlertModal');
         const titleEl = document.getElementById('alertTitle');
         const messageEl = document.getElementById('alertMessage');
         const footerEl = document.getElementById('alertFooter');
 
-        titleEl.textContent = title;
+        // Icon basierend auf Typ
+        const icons = {
+            error: '❌',
+            success: '✅',
+            warning: '⚠️',
+            info: 'ℹ️'
+        };
+
+        titleEl.innerHTML = `${icons[type] || icons.info} ${title}`;
         messageEl.textContent = message;
+        modal.setAttribute('data-type', type);
         
         footerEl.innerHTML = `
             <button class="btn btn-secondary" id="alertCancelBtn">Abbrechen</button>
@@ -84,6 +104,7 @@ function customConfirm(message, title = 'Bestätigung') {
         
         const closeWithResult = (result) => {
             modal.classList.remove('active');
+            modal.removeAttribute('data-type');
             resolve(result);
         };
 
@@ -203,7 +224,7 @@ async function login() {
     const code = document.getElementById('accessCode').value.trim();
     
     if (!code) {
-        await customAlert('Bitte geben Sie einen Zugangscode ein');
+        await customAlert('Bitte geben Sie einen Zugangscode ein', 'Hinweis', 'warning');
         return;
     }
 
@@ -224,13 +245,13 @@ async function login() {
             }
         }
     } catch (error) {
-        await customAlert('Ungültiger Zugangscode', 'Anmeldefehler');
+        await customAlert('Ungültiger Zugangscode', 'Anmeldefehler', 'error');
         console.error('Login error:', error);
     }
 }
 
 async function logout() {
-    const confirmed = await customConfirm('Möchten Sie sich wirklich abmelden?', 'Abmelden');
+    const confirmed = await customConfirm('Möchten Sie sich wirklich abmelden?', 'Abmelden', 'info');
     if (!confirmed) {
         return;
     }
@@ -308,7 +329,7 @@ async function showMasterView() {
         }
     } catch (error) {
         console.error('Error loading contractors:', error);
-        await customAlert('Fehler beim Laden der Subunternehmer', 'Fehler');
+        await customAlert('Fehler beim Laden der Subunternehmer', 'Fehler', 'error');
     }
 }
 
@@ -352,7 +373,7 @@ async function loadOrders() {
         updateStatusCounts();
     } catch (error) {
         console.error('Error loading orders:', error);
-        await customAlert('Fehler beim Laden der Aufträge', 'Fehler');
+        await customAlert('Fehler beim Laden der Aufträge', 'Fehler', 'error');
         allOrders = [];
     }
 }
@@ -529,7 +550,7 @@ function backToMaster() {
 // ORDER ACTIONS
 // ============================================================================
 async function rejectOrder(orderId) {
-    const confirmed = await customConfirm('Möchten Sie diesen Auftrag wirklich ablehnen?', 'Auftrag ablehnen');
+    const confirmed = await customConfirm('Möchten Sie diesen Auftrag wirklich ablehnen? Es wird sofort eine E-Mail an den Kunden gesendet und kann nicht wieder rückgänig gemacht werden.', 'Auftrag ablehnen', 'info');
     if (!confirmed) {
         return;
     }
@@ -548,7 +569,7 @@ async function rejectOrder(orderId) {
 
     } catch (error) {
         console.error('Reject order error:', error);
-        await customAlert('Fehler beim Ablehnen des Auftrags', 'Fehler');
+        await customAlert('Fehler beim Ablehnen des Auftrags', 'Fehler', 'error');
     }
 }
 
@@ -556,7 +577,7 @@ async function openCompletionModal(orderId) {
     currentOrder = allOrders.find(o => o.id === orderId);
     
     if (!currentOrder) {
-        await customAlert('Auftrag nicht gefunden', 'Fehler');
+        await customAlert('Auftrag nicht gefunden', 'Fehler', 'error');
         return;
     }
 
@@ -582,12 +603,12 @@ function closeModal() {
 
 async function completeOrder() {
     if (!document.getElementById('confirmServices').checked) {
-        await customAlert('Bitte bestätigen Sie, dass alle Dienstleistungen durchgeführt wurden');
+        await customAlert('Bitte bestätigen Sie, dass alle Dienstleistungen durchgeführt wurden', 'Hinweis', 'warning');
         return;
     }
 
     if (!signaturePad.hasSignature) {
-        await customAlert('Bitte lassen Sie den Kunden unterschreiben');
+        await customAlert('Bitte lassen Sie den Kunden unterschreiben', 'Hinweis', 'warning');
         return;
     }
 
@@ -609,7 +630,7 @@ async function completeOrder() {
 
     } catch (error) {
         console.error('Complete order error:', error);
-        await customAlert('Fehler beim Abschließen des Auftrags', 'Fehler');
+        await customAlert('Fehler beim Abschließen des Auftrags', 'Fehler', 'error');
     }
 }
 
