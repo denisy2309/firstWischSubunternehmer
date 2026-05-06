@@ -245,7 +245,7 @@ async function login() {
             }
         }
     } catch (error) {
-        await customAlert('Ungültiger Zugangscode', 'Anmeldefehler', 'error');
+        await customAlert('Ungültiger Zugangscode!', 'Anmeldefehler', 'error');
         console.error('Login error:', error);
     }
 }
@@ -579,7 +579,7 @@ async function openCompletionModal(orderId) {
     currentOrder = allOrders.find(o => o.id === orderId);
     
     if (!currentOrder) {
-        await customAlert('Auftrag nicht gefunden', 'Fehler', 'error');
+        await customAlert('Auftrag nicht gefunden!', 'Fehler', 'error');
         return;
     }
 
