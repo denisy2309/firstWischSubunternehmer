@@ -457,10 +457,10 @@ function displayOrders(status) {
     // Aufträge nach Tagen gruppieren (Reihenfolge der vorhandenen Sortierung beibehalten)
     const dayGroups = {};
     filteredOrders.forEach(order => {
-        const dayKey = getDayKey(order.appointment_date);
+        const dayKey = getDayKey(order.Datum);
         if (!dayGroups[dayKey]) {
             dayGroups[dayKey] = {
-                label: getDayLabel(order.appointment_date),
+                label: getDayLabel(order.Datum),
                 orders: []
             };
         }
@@ -508,12 +508,6 @@ function displayOrders(status) {
  */
 function getDayKey(appointmentDate) {
     if (!appointmentDate || appointmentDate === 'N/A') return '0000-00-00';
-
-    // Bereits formatiert: DD.MM.YYYY → YYYY-MM-DD für Sortierung
-    if (appointmentDate.includes('.')) {
-        const [day, month, year] = appointmentDate.split('.');
-        return `${year}-${month}-${day}`;
-    }
 
     // Rohformat YYYY-MM-DD
     return appointmentDate.substring(0, 10);
