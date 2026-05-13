@@ -444,6 +444,11 @@ function displayOrders(status) {
         });
     }
 
+    const openTiles = new Set();
+    ordersList.querySelectorAll('.day-tile.open').forEach(tile => {
+        openTiles.add(tile.dataset.dayKey);
+    });
+
     if (filteredOrders.length === 0) {
         ordersList.innerHTML = `
             <div class="empty-state">
@@ -470,8 +475,11 @@ function displayOrders(status) {
     ordersList.innerHTML = '';
 
     Object.entries(dayGroups).forEach(([key, group]) => {
+        const wasOpen = openTiles.has(key);
+
         const tile = document.createElement('div');
-        tile.className = `day-tile`;
+        tile.className = `day-tile${wasOpen ? ' open' : ''}`;
+        tile.dataset.dayKey = key;
 
         tile.innerHTML = `
             <div class="day-tile-header">
