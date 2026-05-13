@@ -432,7 +432,7 @@ function showOrders(status) {
 
 function displayOrders(status) {
     const ordersList = document.getElementById('ordersList');
-    const filteredOrders = allOrders.filter(o => o.status === status);
+    const filteredOrders = allOrders.filter(o => o.Status === status);
 
     // Für Abgelehnt und Erledigt nach Datum + Uhrzeit absteigend sortieren
     if (status === 'Abgelehnt' || status === 'Erledigt') {
