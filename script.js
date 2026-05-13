@@ -468,11 +468,10 @@ function displayOrders(status) {
     });
 
     ordersList.innerHTML = '';
-    let isFirst = true;
 
     Object.entries(dayGroups).forEach(([key, group]) => {
         const tile = document.createElement('div');
-        tile.className = `day-tile${isFirst ? ' open' : ''}`;
+        tile.className = `day-tile`;
 
         tile.innerHTML = `
             <div class="day-tile-header">
@@ -497,7 +496,6 @@ function displayOrders(status) {
         });
 
         ordersList.appendChild(tile);
-        isFirst = false;
     });
 }
 
