@@ -432,7 +432,7 @@ function showOrders(status) {
 
 function displayOrders(status) {
     const ordersList = document.getElementById('ordersList');
-    let filteredOrders = allOrders.filter(o => o.Status === status);
+    const filteredOrders = allOrders.filter(o => o.status === status);
 
     // Für Abgelehnt und Erledigt nach Datum + Uhrzeit absteigend sortieren
     if (status === 'Abgelehnt' || status === 'Erledigt') {
@@ -454,12 +454,98 @@ function displayOrders(status) {
         return;
     }
 
-    ordersList.innerHTML = '';
-
+    // Aufträge nach Tagen gruppieren (Reihenfolge der vorhandenen Sortierung beibehalten)
+    const dayGroups = {};
     filteredOrders.forEach(order => {
-        const card = createOrderCard(order, status);
-        ordersList.appendChild(card);
+        const dayKey = getDayKey(order.appointment_date);
+        if (!dayGroups[dayKey]) {
+            dayGroups[dayKey] = {
+                label: getDayLabel(order.appointment_date),
+                orders: []
+            };
+        }
+        dayGroups[dayKey].orders.push(order);
     });
+
+    ordersList.innerHTML = '';
+    let isFirst = true;
+
+    Object.entries(dayGroups).forEach(([key, group]) => {
+        const tile = document.createElement('div');
+        tile.className = `day-tile${isFirst ? ' open' : ''}`;
+
+        tile.innerHTML = `
+            <div class="day-tile-header">
+                <div class="day-tile-header-left">
+                    <span class="day-tile-title">${group.label}</span>
+                    <span class="day-tile-count">${group.orders.length} Auftrag${group.orders.length !== 1 ? 'e' : ''}</span>
+                </div>
+                <span class="day-tile-chevron">▼</span>
+            </div>
+            <div class="day-tile-body"></div>
+        `;
+
+        // Toggle on header click
+        tile.querySelector('.day-tile-header').addEventListener('click', () => {
+            tile.classList.toggle('open');
+        });
+
+        // Aufträge einfügen
+        const body = tile.querySelector('.day-tile-body');
+        group.orders.forEach(order => {
+            body.appendChild(createOrderCard(order, status));
+        });
+
+        ordersList.appendChild(tile);
+        isFirst = false;
+    });
+}
+
+/**
+ * Extrahiert einen sortierbaren Schlüssel aus dem Termindatum
+ * Erwartet das bereits formatierte Feld appointment_date (DD.MM.YYYY)
+ * oder einen Rohwert – fällt auf "0000-00-00" als Fallback zurück
+ */
+function getDayKey(appointmentDate) {
+    if (!appointmentDate || appointmentDate === 'N/A') return '0000-00-00';
+
+    // Bereits formatiert: DD.MM.YYYY → YYYY-MM-DD für Sortierung
+    if (appointmentDate.includes('.')) {
+        const [day, month, year] = appointmentDate.split('.');
+        return `${year}-${month}-${day}`;
+    }
+
+    // Rohformat YYYY-MM-DD
+    return appointmentDate.substring(0, 10);
+}
+
+/**
+ * Erzeugt den lesbaren Kachel-Titel: "Montag, 11.05.2026"
+ */
+function getDayLabel(appointmentDate) {
+    if (!appointmentDate || appointmentDate === 'N/A') return 'Kein Termin';
+
+    let dateObj;
+
+    if (appointmentDate.includes('.')) {
+        // DD.MM.YYYY
+        const [day, month, year] = appointmentDate.split('.');
+        dateObj = new Date(`${year}-${month}-${day}`);
+    } else {
+        // YYYY-MM-DD
+        dateObj = new Date(appointmentDate.substring(0, 10));
+    }
+
+    if (isNaN(dateObj)) return appointmentDate;
+
+    const weekday = dateObj.toLocaleDateString('de-DE', { weekday: 'long' });
+    const formatted = dateObj.toLocaleDateString('de-DE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+
+    return `${weekday}, ${formatted}`;
 }
 
 function createOrderCard(order, status) {
