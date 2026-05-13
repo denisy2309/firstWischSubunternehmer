@@ -571,7 +571,7 @@ function createOrderCard(order, status) {
     card.innerHTML = `
         <div class="order-header">
             <div class="order-id">Auftrag #${order.id}</div>
-            <div class="order-date">${formatDate(order.Auftragseingang, 'YYYY-DD-MM')}</div>
+            <div class="order-date">${formatDate(order.Auftragseingang, 'YYYY-MM-DD')}</div>
         </div>
         <div class="order-details">
             <div class="detail-item">
